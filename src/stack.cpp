@@ -137,3 +137,109 @@ unsigned Stack<T>::capacity() {
 	return Capacity;
 }
 
+///////////////////
+// BASIC METHODS //
+///////////////////
+
+// Copy push
+template <typename T>
+void Stack<T>::push(const T& value) {
+	VERIFY_CONTRACT(this->ok(), "ERROR: cannot push to invalid stack");
+
+	// reallocate
+	if (Length == Capacity) {
+		Capacity *= 2;
+		T* buffer;
+		try {
+			buffer = new T[Capacity];	
+		}
+		catch (const std::exception& exc) {
+			TERMINATE("ERROR: unable to allocate memory for push: " << exc.what());
+		}
+
+		std::copy_n(array, buffer, Length);
+		delete[] array;
+		array = buffer;
+		buffer = nullptr;
+	}
+
+	array[Length] = value;
+	++Length;
+	VERIFY_CONTRACT(this->ok(), "ERROR: push failed, resulting stack is invalid");
+}
+
+// Move push
+template <typename T>
+void Stack<T>::push(T&& value) {
+	VERIFY_CONTRACT(this->ok(), "ERROR: cannot push to invalid stack");
+
+	// reallocate
+	if (Length == Capacity) {
+		Capacity *= 2;
+		T* buffer;
+		try {
+			buffer = new T[Capacity];	
+		}
+		catch (const std::exception& exc) {
+			TERMINATE("ERROR: unable to reallocate memory for push: " << exc.what());
+		}
+		
+		std::copy_n(array, buffer, Length);
+		delete[] array;
+		array = buffer;
+		buffer = nullptr;
+	}
+
+	array[Length] = std::move(value);
+	++Length;
+	VERIFY_CONTRACT(this->ok(), "ERROR: push failed, resulting stack is invalid");
+}
+
+// Pop
+template <typename T>
+void Stack<T>::pop() {
+	VERIFY_CONTRACT(this->ok(), "ERROR: cannot pop from invalid stack");
+
+	if (Length == 0U) return;
+
+	// reallocate
+	if (4*Length < Capacity) {
+		Capacity /= 2;
+		T* buffer;
+		try {
+			buffer = new T[Capacity];	
+		}
+		catch (const std::exception& exc) {
+			TERMINATE("ERROR: unable to reallocate memory for pop: " << exc.what());
+		}
+
+		std::copy_n(array, buffer, Length);
+		delete[] array;
+		array = buffer;
+		buffer = nullptr;
+	}
+
+	--Length;
+	VERIFY_CONTRACT(this->ok(), "ERROR: pop failed, resulting stack is invalid");
+}
+
+// Top
+template <typename T>
+T& Stack<T>::top() {
+	VERIFY_CONTRACT(this->ok(), "ERROR: cannot get top element from invalid stack");
+
+	return array[Length - 1];
+}
+
+// Comparison operator
+bool Stack<T>::operator== (const Stack<T>& other) {
+	VERIFY_CONTRACT(this->ok(), "ERROR: left side of comparison operator is invalid");
+	VERIFY_CONTRACT(other.ok(), "ERROR: right side of comparison operator is invalid");
+
+	if (Length != other.Length) return false;
+
+	for (unsigned i = 0; i < Length; i++) {
+		if (array[i] != other.array[i]) return false;
+	}
+	return true;
+}

@@ -36,4 +36,6 @@ public:
 	void push(T&& value);
 	void pop();
 	T& top();
+
+	bool operator== (const Stack& other);
 };

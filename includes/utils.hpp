@@ -7,6 +7,10 @@ if (!(contract)) { \
 	exit(1); \
 }
 
+#define TERMINATE(message) \
+	std::cout << SET_COLOR_RED << message << RESET_COLOR << '\n'; \
+	exit(1);
+
 #define SET_COLOR_RED 		"\033[1;31m"
 #define SET_COLOR_GREEN 	"\033[1;32m"
 #define SET_COLOR_YELLOW 	"\033[1;33m"
