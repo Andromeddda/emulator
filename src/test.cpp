@@ -1,14 +1,25 @@
 #include "utils.hpp"
+#include "stack.hpp"
 
 #include <cstdlib>
 #include <iostream>
 
+using namespace stack_ns;
+
+class Logger {
+public:
+	Logger() {
+		std::cout << "Constructor" << std::endl;
+	}
+
+	~Logger() {
+		std::cout << "Destructor" << std::endl;
+	}
+};
+
 int main(void) {
 
-	std::cout << SET_COLOR_RED << "SOME CODE IS RUNNING" << RESET_COLOR << '\n';
-	std::cout << SET_COLOR_GREEN << "SOME CODE IS RUNNING" << RESET_COLOR << '\n';
-	std::cout << SET_COLOR_CYAN << "SOME CODE IS RUNNING" << RESET_COLOR << '\n';
-	std::cout << SET_COLOR_PURPLE << "SOME CODE IS RUNNING" << RESET_COLOR << '\n';
-	std::cout << SET_COLOR_YELLOW << "SOME CODE IS RUNNING" << RESET_COLOR << '\n';
+	Stack<Logger> x = Stack<Logger>();
+	Stack<Logger> y = x;
 	return 0;
 }

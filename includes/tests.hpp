@@ -4,4 +4,6 @@ bool test_move_constructor();
 bool test_copy_assignment();
 bool test_move_assignment();
 bool test_copy_push();
-bool test
+bool test_move_push();
+bool test_pop();
+bool test_top();
