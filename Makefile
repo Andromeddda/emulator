@@ -21,7 +21,7 @@ CFLAGS = \
 	-Wall \
 	-Werror \
 	-Wextra \
-	-std=c++17 \
+	-std=c++20 \
 	-O3
 
 # Add include directory
