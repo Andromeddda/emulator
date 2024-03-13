@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HEADER_GUARD_STACK_HPP_INCLUDED
+#define HEADER_GUARD_STACK_HPP_INCLUDED
 
 #include <algorithm>
 #include <iostream>
@@ -45,6 +46,7 @@ namespace stack_ns {
 		void push(T&& value);
 		void pop();
 		T& top();
+		T top() const;
 
 	}; // class Stack
 
@@ -196,7 +198,9 @@ namespace stack_ns {
 				TERMINATE("ERROR: unable to allocate memory for push: " << exc.what());
 			}
 
-			std::copy_n(array, buffer, Length);
+			for (unsigned i = 0; i < Length; i++) {
+				buffer[i] = std::move(array[i]);
+			}
 			delete[] array;
 			array = buffer;
 			buffer = nullptr;
@@ -223,7 +227,9 @@ namespace stack_ns {
 				TERMINATE("ERROR: unable to reallocate memory for push: " << exc.what());
 			}
 			
-			std::copy_n(array, buffer, Length);
+			for (unsigned i = 0; i < Length; i++) {
+				buffer[i] = std::move(array[i]);
+			}
 			delete[] array;
 			array = buffer;
 			buffer = nullptr;
@@ -241,7 +247,7 @@ namespace stack_ns {
 
 		if (Length == 0U) return;
 
-		// reallocate
+		//reallocate
 		if (4*Length < Capacity) {
 			Capacity /= 2;
 			T* buffer;
@@ -252,7 +258,10 @@ namespace stack_ns {
 				TERMINATE("ERROR: unable to reallocate memory for pop: " << exc.what());
 			}
 
-			std::copy_n(array, buffer, Length);
+			//std::copy_n(array, buffer, Length);
+			for (unsigned i = 0; i < Length; i++) {
+				buffer[i] = std::move(array[i]);
+			}
 			delete[] array;
 			array = buffer;
 			buffer = nullptr;
@@ -267,7 +276,21 @@ namespace stack_ns {
 	T& Stack<T>::top() {
 		VERIFY_CONTRACT(this->ok(), "ERROR: cannot get top element from invalid stack");
 
+		VERIFY_CONTRACT(Length > 0, "ERROR: cannot read top element of empty stack");
+
+		return array[Length - 1];
+	}
+
+	// Top
+	template <typename T>
+	T Stack<T>::top() const {
+		VERIFY_CONTRACT(this->ok(), "ERROR: cannot get top element from invalid stack");
+
+		VERIFY_CONTRACT(Length > 0, "ERROR: cannot read top element of empty stack");
+
 		return array[Length - 1];
 	}
 
 } // namespace stack_ns
+
+#endif //HEADER_GUARD_STACK_HPP_INCLUDED

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HEADER_GUARD_UTILS_HPP_INCLUDED
+#define HEADER_GUARD_UTILS_HPP_INCLUDED
 
 #include <iostream>
 #include <cstdlib>
@@ -20,3 +21,4 @@ if (!(contract)) { \
 #define SET_COLOR_CYAN 		"\033[1;36m"
 #define RESET_COLOR 		"\033[0m"
 
+#endif //HEADER_GUARD_UTILS_HPP_INCLUDED

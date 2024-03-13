@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HEADER_GUARD_CPU_HPP_INCLUDED
+#define HEADER_GUARD_CPU_HPP_INCLUDED
 
 #include <vector>
 #include <map>
@@ -61,3 +62,4 @@ public:
 	void run();
 };
 
+#endif //HEADER_GUARD_CPU_HPP_INCLUDED

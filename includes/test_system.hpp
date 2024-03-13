@@ -1,3 +1,6 @@
+#ifndef HEADER_GUARD_TEST_SYSTEM_HPP_INCLUDED
+#define HEADER_GUARD_TEST_SYSTEM_HPP_INCLUDED
+
 #include <iostream>
 
 namespace TestSystem {
@@ -14,3 +17,5 @@ namespace TestSystem {
 
     TestResult run_test(const char* name, TestScenario test);
 }
+
+#endif //HEADER_GUARD_TEST_SYSTEM_HPP_INCLUDED
