@@ -15,6 +15,8 @@ namespace stack_ns {
 		T* array;
 
 		bool ok() const;
+		void augment();
+		void diminish();
 
 	public:
 		//////////////////////
@@ -41,6 +43,8 @@ namespace stack_ns {
 		/////////////
 		// Methods //
 		/////////////
+		template <typename... Args>
+		void emplace(Args&&...  args);
 
 		void push(const T& value);
 		void push(T&& value);
@@ -50,6 +54,50 @@ namespace stack_ns {
 
 	}; // class Stack
 
+	///////////////////////
+	// Memory management //
+	///////////////////////
+	template <typename T>
+	void Stack<T>::augment() {
+		VERIFY_CONTRACT(this->ok(), "ERROR: cannot allocate memory for invalid stack");
+
+		Capacity *= 2;
+		T* buffer;
+		try {
+			buffer = new T[Capacity];	
+		}
+		catch (const std::exception& exc) {
+			TERMINATE("ERROR: unable to reallocate memory for push: " << exc.what());
+		}
+		
+		for (unsigned i = 0; i < Length; i++) {
+			buffer[i] = std::move(array[i]);
+		}
+		delete[] array;
+		array = buffer;
+		buffer = nullptr;
+	}
+
+	template <typename T>
+	void Stack<T>::diminish() {
+		VERIFY_CONTRACT(this->ok(), "ERROR: cannot allocate memory for invalid stack");
+
+		Capacity /= 2;
+		T* buffer;
+		try {
+			buffer = new T[Capacity];	
+		}
+		catch (const std::exception& exc) {
+			TERMINATE("ERROR: unable to reallocate memory for push: " << exc.what());
+		}
+		
+		for (unsigned i = 0; i < Length; i++) {
+			buffer[i] = std::move(array[i]);
+		}
+		delete[] array;
+		array = buffer;
+		buffer = nullptr;
+	}
 
 	//////////////////////
 	// The rule of five //
@@ -189,21 +237,7 @@ namespace stack_ns {
 
 		// reallocate
 		if (Length == Capacity) {
-			Capacity *= 2;
-			T* buffer;
-			try {
-				buffer = new T[Capacity];	
-			}
-			catch (const std::exception& exc) {
-				TERMINATE("ERROR: unable to allocate memory for push: " << exc.what());
-			}
-
-			for (unsigned i = 0; i < Length; i++) {
-				buffer[i] = std::move(array[i]);
-			}
-			delete[] array;
-			array = buffer;
-			buffer = nullptr;
+			augment();
 		}
 
 		array[Length] = value;
@@ -218,26 +252,24 @@ namespace stack_ns {
 
 		// reallocate
 		if (Length == Capacity) {
-			Capacity *= 2;
-			T* buffer;
-			try {
-				buffer = new T[Capacity];	
-			}
-			catch (const std::exception& exc) {
-				TERMINATE("ERROR: unable to reallocate memory for push: " << exc.what());
-			}
-			
-			for (unsigned i = 0; i < Length; i++) {
-				buffer[i] = std::move(array[i]);
-			}
-			delete[] array;
-			array = buffer;
-			buffer = nullptr;
+			augment();
 		}
 
 		array[Length] = std::move(value);
 		++Length;
 		VERIFY_CONTRACT(this->ok(), "ERROR: push failed, resulting stack is invalid");
+	}
+
+	// Constructing in-place
+	template <typename T>
+	template <typename... Args>
+	void Stack<T>::emplace(Args&&... args) {
+		VERIFY_CONTRACT(this->ok(), "ERROR: cannot emplace to invalid stack");
+		// reallocate
+		if (Length == Capacity) {
+			augment();
+		}
+		array[Length] = T(std::forward<Args>(args)...);
 	}
 
 	// Pop
@@ -249,22 +281,7 @@ namespace stack_ns {
 
 		//reallocate
 		if (4*Length < Capacity) {
-			Capacity /= 2;
-			T* buffer;
-			try {
-				buffer = new T[Capacity];	
-			}
-			catch (const std::exception& exc) {
-				TERMINATE("ERROR: unable to reallocate memory for pop: " << exc.what());
-			}
-
-			//std::copy_n(array, buffer, Length);
-			for (unsigned i = 0; i < Length; i++) {
-				buffer[i] = std::move(array[i]);
-			}
-			delete[] array;
-			array = buffer;
-			buffer = nullptr;
+			diminish();
 		}
 
 		--Length;

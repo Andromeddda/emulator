@@ -46,7 +46,6 @@ public:
 	RegisterArgCommand(const RegisterName& reg_name);
 };
 
-
 class LabelArgCommand: public Command {
 protected:
 	const std::string argument;

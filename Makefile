@@ -103,6 +103,7 @@ include $(wildcard $(DEPFILES))
 $(TEST): $(TEST_EXECUTABLE)
 	@mkdir -p res
 	./$(TEST_EXECUTABLE)
+	@cat hello.txt
 
 #-------
 # Other

@@ -1,0 +1,70 @@
+Default constructor
+Default constructor
+Destructor
+Destructor
+Default constructor
+Default constructor
+Default constructor
+Default constructor
+Destructor
+Destructor
+Destructor
+Destructor
+Default constructor
+Default constructor
+Default constructor
+Default constructor
+Destructor
+Destructor
+Destructor
+Destructor
+Default constructor
+Default constructor
+Default constructor
+Default constructor
+Destructor
+Destructor
+Destructor
+Destructor
+Default constructor
+Default constructor
+Default constructor
+Default constructor
+Destructor
+Destructor
+Destructor
+Destructor
+Default constructor
+Default constructor
+Default constructor
+Copy assignment
+Destructor
+Destructor
+Destructor
+Default constructor
+Default constructor
+Default constructor
+Copy assignment
+Destructor
+Destructor
+Destructor
+Default constructor
+Default constructor
+Default constructor
+Move assignment
+Destructor
+Destructor
+Default constructor
+Default constructor
+Default constructor
+Copy assignment
+Destructor
+Destructor
+Destructor
+Default constructor
+Default constructor
+Default constructor
+Copy assignment
+Destructor
+Destructor
+Destructor
