@@ -19,6 +19,7 @@ enum CommandArgType { NoArg, LabelArg, IntArg, RegArg };
 class Command {
 public:
 	Command() = default;
+	virtual ~Command() = default;
 	virtual void execute(CPU& cpu) = 0;
 	static CommandArgType get_command_arg_type(const std::string& name);
 };
@@ -30,6 +31,7 @@ public:
 class NoArgCommand: public Command {
 public:
 	NoArgCommand() = default;
+	virtual ~NoArgCommand() = default;
 };
 
 class IntArgCommand: public Command {
@@ -37,6 +39,7 @@ protected:
 	const int argument;
 public:
 	IntArgCommand(const int& val);
+	virtual ~IntArgCommand() = default;
 };
 
 class RegisterArgCommand: public Command {
@@ -44,6 +47,7 @@ protected:
 	const RegisterName argument;
 public:
 	RegisterArgCommand(const RegisterName& reg_name);
+	virtual ~RegisterArgCommand() = default;
 };
 
 class LabelArgCommand: public Command {
@@ -51,6 +55,7 @@ protected:
 	const std::string argument;
 public:
 	LabelArgCommand(const std::string& label_name);
+	virtual ~LabelArgCommand() = default;
 };
 
 #endif //HEADER_GUARD_COMMAND_HPP_INCLUDED

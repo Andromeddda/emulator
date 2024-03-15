@@ -103,7 +103,7 @@ public:
 	RETCommand() = default;
 	static Command* get_command() { return new RETCommand(); }
 	virtual void execute(CPU& cpu) override {
-		//cpu.registers[PC] = (cpu.call_stack.top());
+		cpu.registers[PC] = (cpu.call_stack.top());
 		cpu.call_stack.pop();
 	}
 };
@@ -155,7 +155,7 @@ public:
 	static Command* get_command(const std::string label_name) { return new JMPCommand(label_name); }
 	virtual void execute(CPU& cpu) override {
 		VERIFY_CONTRACT(cpu.labels.contains(argument), "ERROR: JMP to non-existing label");
-		//cpu.registers[PC] = (cpu.labels[argument]);
+		cpu.registers[PC] = (cpu.labels[argument]);
 	}
 };
 
@@ -170,7 +170,7 @@ public:
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs == lhs) {
-			//cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.registers[PC] = (cpu.labels[argument]);
 		}
 	}
 };
@@ -186,7 +186,7 @@ public:
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs != lhs) {
-			//cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.registers[PC] = (cpu.labels[argument]);
 		}
 	}
 };
@@ -202,7 +202,7 @@ public:
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs > lhs) {
-			//cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.registers[PC] = (cpu.labels[argument]);
 		}
 	}
 };
@@ -218,7 +218,7 @@ public:
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs >= lhs) {
-			//cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.registers[PC] = (cpu.labels[argument]);
 		}
 	}
 };
@@ -234,7 +234,7 @@ public:
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs < lhs) {
-			//cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.registers[PC] = (cpu.labels[argument]);
 		}
 	}
 };
@@ -250,7 +250,7 @@ public:
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs <= lhs) {
-			//cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.registers[PC] = (cpu.labels[argument]);
 		}
 	}
 };
@@ -262,7 +262,7 @@ public:
 	virtual void execute(CPU& cpu) override {
 		VERIFY_CONTRACT(cpu.labels.contains(argument), "ERROR: CALL of non-existing label");
 		cpu.call_stack.push(cpu.labels[argument]);
-		//cpu.registers[PC] = (cpu.call_stack.top());
+		cpu.registers[PC] = (cpu.call_stack.top());
 	}
 };
 

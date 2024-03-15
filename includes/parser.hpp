@@ -13,10 +13,10 @@
 
 class Parser {
 private:
-	std::ifstream file;
-	const char* pos;
-	const char* end;
-	char line[MAX_LINE_SIZE];
+	std::ifstream file_;
+	const char* pos_;
+	const char* end_;
+	char line_[MAX_LINE_SIZE];
 
 	void read_line_from_file();
 	bool parse_sequence(std::regex regexp);
@@ -25,12 +25,12 @@ private:
 	bool parse_space_sequence();
 	bool parse_newline_sequence();
 
-	CommandArgType parse_arg_type();
+	std::string& parse_command_name();
 	RegisterName parse_register();
 	std::string& parse_label();
 	int parse_number();
+	Command* parse_command_line();
 
-	Command parse_command();
 public:
 	Parser(const char* filename);
 	~Parser() = default;

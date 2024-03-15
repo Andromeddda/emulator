@@ -62,3 +62,4 @@ void CPU::run() {
 		commands[registers[PC]]->execute(*this);
 	}
 }
+

@@ -3,12 +3,29 @@
 
 #include <vector>
 #include <map>
+#include <string>
 
 #include "stack.hpp"
 
 class Command;
 
 enum RegisterName { PC, AX, BX, CX, DX, EX, FX };
+
+const std::map<std::string, RegisterName> str_to_reg {
+	{"PC", PC},
+	{"AX", AX},
+	{"BX", BX},
+	{"CX", CX},
+	{"DX", DX},
+	{"EX", EX},
+	{"FX", FX}
+}
+
+RegisterName get_register_id(const std::string& name) {
+	VERIFY_CONTRACT(str_to_reg.contains(name), "ERROR: cannot convert string to RegisterName. No such register");
+	return str_to_reg.at(name);
+}
+
 const unsigned REGS = 7;
 const std::string BEGIN_L = "BEGIN";
 const std::string END_L = "END";
@@ -57,6 +74,9 @@ public:
 	stack_ns::Stack<size_t> call_stack;
 
 	CPU(std::vector<Command*> code, Labels labs);
+
+	// all the fields that need to be cleared (Registers, Labels and two Stacks) have good destructors
+	// so  this destructor can be default
 	~CPU() = default;
 
 	void run();

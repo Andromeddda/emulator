@@ -103,8 +103,9 @@ include $(wildcard $(DEPFILES))
 $(TEST): $(TEST_EXECUTABLE)
 	@mkdir -p res
 	./$(TEST_EXECUTABLE)
-	@cat hello.txt
 
+log:
+	@cat hello.txt
 #-------
 # Other
 #-------
@@ -115,4 +116,4 @@ clean:
 	rm -rf $(BUILD)
 
 # List of non-file targets:
-.PHONY: test clean default
+.PHONY: test clean default log
