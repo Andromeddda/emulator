@@ -139,7 +139,7 @@ bool Parser::parse_end_of_file() {
 }
 
 bool Parser::parse_label_declaration() {
-    static const std::regex pattern{"[A-Za-z]+:"};
+    static const std::regex pattern{"[A-Za-z_\\-]+:"};
 
     // Skip leading whitespaces
     parse_space_sequence();
@@ -216,7 +216,7 @@ int Parser::parse_int_number() {
 }
 
 std::string Parser::parse_label() {
-    static const std::regex pattern{"[A-Za-z]+"};
+    static const std::regex pattern{"[A-Za-z_\\-]+"};
 
     // Skip leading whitespaces:
     bool success = parse_space_sequence();

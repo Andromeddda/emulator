@@ -1,0 +1,25 @@
+fact:
+	POPR AX
+	PUSHR AX
+	PUSHR AX
+	PUSH 1
+	JAE return_one
+
+	POPR AX
+	PUSHR AX
+	PUSH 1
+	PUSHR AX
+	SUB
+	CALL fact
+	MUL
+	RET
+
+	return_one:
+		POP
+		PUSH 1
+		RET
+BEGIN
+	IN
+	CALL fact
+	OUT
+END
