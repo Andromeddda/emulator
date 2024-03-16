@@ -5,6 +5,8 @@
 #include <fstream>
 #include <iterator>
 #include <vector>
+#include <map>
+#include <set>
 
 #define MAX_LINE_SIZE 100
 
@@ -12,7 +14,7 @@
 class Labels {
 private:
 	// Key-Value map of labels
-	std::map<std::string, int> labels;
+	
 public:
 	Labels() = default;
 	
@@ -45,13 +47,14 @@ private:
 	bool parse_label_declaration();
 	int parse_command();
 	int parse_register();
-	int parse_label();
+	std::string parse_label();
 	int parse_int_number();
-	
-	Labels labels;
+
+	std::map<std::string, int> declared_labels;
+	std::map<long int, std::string> used_labels;
 public:
 	Parser(const std::string& filename);
-	~Parser() = default;
+	~Parser();
 
 	Parser() = delete;
 	Parser(const Parser& other) = delete;

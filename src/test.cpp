@@ -10,7 +10,7 @@
 using namespace stack_ns;
 using namespace TestSystem;
 
-#define TEST
+//#define TEST
 
 int main(void) {
 	std::ofstream out;
@@ -18,6 +18,15 @@ int main(void) {
 	if (out.is_open()) {
 		out.close();
 	}
+
+
+	Stack<int> s = Stack<int>();
+	s.push(1);
+	s.push(2);
+	std::cout << s.top() << '\n';
+	s.pop();
+	std::cout << s.top() << '\n';
+	s.pop();
 	
 	#ifdef TEST	
 	run_test("empty constructor", test_empty_constructor);

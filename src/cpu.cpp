@@ -49,9 +49,9 @@ void CPU::run() {
 
 		int correct = sscanf(line_, "%d %d", &command_id, &argument);
 
-		// printf("read %d %d\n", command_id, argument);
+		//printf("read %d %d\n", command_id, argument);
 		VERIFY_CONTRACT(correct, "ERROR: invalid .bcode file format. Unexpected symbol or incorrect id");
-		commands.push_back(Command::get_command(command_id, argument, current_line));
+		commands.push_back(Command::get_command(command_id, argument));
 
 		if (command_id == 10) begin = current_line;
 		if (command_id == 19) end = current_line;

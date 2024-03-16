@@ -19,10 +19,10 @@ protected:
 	const int argument;
 public:
 	Command();
-	Command(const int& arg);
+	Command(int arg);
 	~Command() = default;
 	virtual void execute(CPU& cpu) = 0;
-	static Command* get_command(const int& id, const int& argument, const unsigned& line);
+	static Command* get_command(int id, int argument);
 };
 
 

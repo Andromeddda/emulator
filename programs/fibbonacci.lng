@@ -1,0 +1,31 @@
+BEGIN
+	PUSH 0
+	POPR AX
+	PUSH 1
+	POPR BX
+
+	PUSH 0
+	POPR CX
+
+	for:
+		PUSH 40
+		PUSHR CX
+		JAE endfor
+
+		PUSHR BX
+		OUT
+
+		PUSHR AX
+		PUSHR BX
+		ADD
+		PUSHR BX
+		POPR AX
+		POPR BX
+
+		PUSHR CX
+		PUSH 1
+		ADD
+		POPR CX
+		JMP for
+	endfor:
+END

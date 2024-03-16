@@ -12,6 +12,7 @@ INCLUDES = includes
 SRCDIR = src
 BUILD = build
 DEPDIR := $(BUILD)/deps
+PROGDIR = programs
 
 #-------
 # Flags
@@ -53,7 +54,7 @@ RESET   = \033[0m
 #-------
 
 TEST = test
-CODE = main
+CODE = code
 RUN = run
 
 SOURCES = $(notdir $(wildcard $(SRCDIR)/*.cpp))
@@ -111,6 +112,21 @@ $(DEPFILES):
 # Include all created dependencies in current makefile
 include $(wildcard $(DEPFILES))
 
+#-------------------
+# Passing arguments
+#-------------------
+
+ifeq ($(CODE), $(firstword $(MAKECMDGOALS)))
+  CODE_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  $(eval $(CODE_ARGS):;@:)
+endif
+
+ifeq ($(RUN), $(firstword $(MAKECMDGOALS)))
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  $(eval $(RUN_ARGS):;@:)
+endif
+
+
 #-----------------
 # Run the program
 #-----------------
@@ -120,13 +136,13 @@ $(TEST): $(TEST_EXECUTABLE)
 	@mkdir -p res
 	./$<
 
+$(CODE): $(CODE_EXECUTABLE)
+	@mkdir -p res
+	./$< $(PROGDIR)/$(CODE_ARGS)
+
 $(RUN): $(RUN_EXECUTABLE)
 	@mkdir -p res
-	./$<
-
-code: $(CODE_EXECUTABLE)
-	@mkdir -p res
-	./$<
+	./$< $(PROGDIR)/$(RUN_ARGS)
 
 
 log:
@@ -139,6 +155,7 @@ clean:
 	@printf "$(BYELLOW)Cleaning build and resource directories$(RESET)\n"
 	rm -rf res
 	rm -rf $(BUILD)
+	rm -f programs/*.bcode
 
 # List of non-file targets:
-.PHONY: test clean default log code
+.PHONY: test clean default log

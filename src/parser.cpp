@@ -45,8 +45,8 @@ const std::map<std::string, int> command_name_to_id {
 
     {"PUSH", 30},
 
-    {"PUSHR", 40},
-    {"POPR", 41}
+    {"POPR", 40},
+    {"PUSHR", 41}
 };
 
 int get_command_id(std::string& name) {
@@ -55,25 +55,6 @@ int get_command_id(std::string& name) {
 }
 
 ////////////
-// LABELS //
-////////////
-
-// read-only access by key
-// return the pointer
-int Labels::operator[] (const std::string& name) {
-    VERIFY_CONTRACT(labels.contains(name), "ERROR: there is no such label as \"" << name << "\"");
-    return labels.at(name);
-}
-
-void Labels::add(const std::string& name, int value) {
-    VERIFY_CONTRACT(!labels.contains(name), "ERROR: label \"" << name << "\" already exist");
-    labels.emplace(name, value);
-}
-
-bool Labels::contains(const std::string& name) {
-    return labels.contains(name);
-}
-
 ////////////
 // PARSER //
 ////////////
@@ -85,6 +66,13 @@ Parser::Parser(const std::string& filename) :
 
     // Initialize the first line:
     read_line_from_file();
+}
+
+Parser::~Parser() {
+    //declared_labels.erase();
+    //used_labels.erase();
+    declared_labels.clear();
+    used_labels.clear();
 }
 
 // Put line in private buffer
@@ -152,6 +140,10 @@ bool Parser::parse_end_of_file() {
 
 bool Parser::parse_label_declaration() {
     static const std::regex pattern{"[A-Za-z]+:"};
+
+    // Skip leading whitespaces
+    parse_space_sequence();
+
     // Perform parsing:
     std::string label_str;
     bool success = parse_pattern(pattern, label_str);
@@ -160,7 +152,7 @@ bool Parser::parse_label_declaration() {
     }
 
     label_str.pop_back();
-    labels.add(label_str, command_line_number);
+    declared_labels[label_str] =  command_line_number;
 
     return true;
 }
@@ -223,7 +215,7 @@ int Parser::parse_int_number() {
     return std::atoi(val_str.c_str());
 }
 
-int Parser::parse_label() {
+std::string Parser::parse_label() {
     static const std::regex pattern{"[A-Za-z]+"};
 
     // Skip leading whitespaces:
@@ -240,11 +232,7 @@ int Parser::parse_label() {
         throw std::runtime_error("Expected label name!\n");
     }
 
-    if (!labels.contains(label_str)) {
-        throw std::runtime_error("Reference to undefined label!\n");
-    }
-
-    return labels[label_str];
+    return label_str;
 }
 
 void Parser::parse(const std::string& outfile) {
@@ -259,29 +247,46 @@ void Parser::parse(const std::string& outfile) {
             if (parse_label_declaration()) continue;
             else {
                 int cmd_id = parse_command();
-                int argument;
 
                 // switch case may fall through T_T 
                 if (cmd_id / 10 == 1) {
-                    argument = 0;
+                    out << cmd_id << " " << 0 << std::endl;
                 }
                 else if (cmd_id / 10 == 2) {
-                    argument = parse_label();
+                    // write command and 50 whitespaces as 
+                    out << cmd_id << ' ';
+
+                    // store the pair position-label
+                    used_labels[out.tellp()] = parse_label();
+                    
+                    // write 50 whitespaces as buffer
+                    out << std::string(50, ' ') << std::endl;
                 }
                 else if (cmd_id / 10 == 3) {
-                    argument = parse_int_number();
+                    out << cmd_id << " " << parse_int_number() << std::endl;
                 }
                 else if (cmd_id / 10 == 4) {
-                    argument = parse_register();
+                    //std::cout << "POPR OR PUSHR!!!\n";
+                    out << cmd_id << " " << parse_register() << std::endl;
                 }
                 else {
                     throw std::runtime_error("Unexpected error");
                 }
 
-
-                out << cmd_id << " " << argument << "\n";
                 ++command_line_number;
             }
         } // while
+
+        // Run throug pairs position-label 
+        for (const auto& [key, value] : used_labels) {
+            // Check if label is declared
+            VERIFY_CONTRACT(declared_labels.contains(value), "ERROR: reference to undefined label " << value);
+
+            // Go to the position of byte code where it suppose to be used
+            out.seekp(key);
+
+            // Write the pointer
+            out << declared_labels.at(value);
+        }
     } // if
 } // parse

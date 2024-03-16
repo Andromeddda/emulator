@@ -50,7 +50,6 @@ namespace stack_ns {
 		void push(T&& value);
 		void pop();
 		T& top();
-		T top() const;
 
 	}; // class Stack
 
@@ -270,6 +269,7 @@ namespace stack_ns {
 			augment();
 		}
 		array[Length] = T(std::forward<Args>(args)...);
+		++Length;
 	}
 
 	// Pop
@@ -291,16 +291,6 @@ namespace stack_ns {
 	// Top
 	template <typename T>
 	T& Stack<T>::top() {
-		VERIFY_CONTRACT(this->ok(), "ERROR: cannot get top element from invalid stack");
-
-		VERIFY_CONTRACT(Length > 0, "ERROR: cannot read top element of empty stack");
-
-		return array[Length - 1];
-	}
-
-	// Top
-	template <typename T>
-	T Stack<T>::top() const {
 		VERIFY_CONTRACT(this->ok(), "ERROR: cannot get top element from invalid stack");
 
 		VERIFY_CONTRACT(Length > 0, "ERROR: cannot read top element of empty stack");
