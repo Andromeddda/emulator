@@ -3,63 +3,66 @@
 #include "command.hpp"
 #include "stack.hpp"
 
-///////////////
-// REGISTERS //
-///////////////
-
-Registers::Registers() {
-	values = new int[REGS];
-}
-
-
-Registers::~Registers() {
-	delete[] values;
-	values = nullptr;
-}
-
-// access to register
-int& Registers::operator[] (const RegisterName reg) { return values[reg]; }
-
-// read-
-int Registers::operator[] (const RegisterName reg) const { return values[reg]; }
-
-
-////////////
-// LABELS //
-////////////
-
-// read-only access by key
-// return the pointer
-size_t Labels::operator[] (const std::string& name) {
-	VERIFY_CONTRACT(labels.contains(name), "ERROR: there is no such label as \"" << name << "\"");
-	return labels.at(name);
-}
-
-void Labels::add(const std::string& name, size_t value) {
-	VERIFY_CONTRACT(!labels.contains(name), "ERROR: label \"" << name << "\" already exist");
-	labels.emplace(name, value);
-}
-
-bool Labels::contains(const std::string& name) {
-	return labels.contains(name);
-}
+#include <regex>
 
 /////////
 // CPU //
 /////////
 
-CPU::CPU(std::vector<Command*> code, Labels labs) : 
-	commands(code), labels(labs), registers(Registers()) {
+CPU::CPU(const std::string& filename) : pos_(), next_(), begin(0), end(0) {
+	// Check if the extension is correct
+	std::regex extension {"[A-Za-z_\\/\\-]+\\.bcode"};
+	bool correct_file_extension = std::regex_match(filename, extension);
+	VERIFY_CONTRACT(correct_file_extension, "ERROR: incorrect file extension. Expected .bcode file");
+
+	file_ = std::ifstream(filename);
+	registers = new int[REGS];
+	pc_register = 0;
 }
 
+CPU::~CPU() {
+	if (registers != nullptr) {
+		delete[] registers;
+		registers = nullptr;
+	}
+
+	if (file_.is_open()) {
+		file_.close();
+	}
+}
+
+// read the .bcode file and run the byte code
 void CPU::run() {
-	VERIFY_CONTRACT(labels.contains(BEGIN_L) && labels.contains(END_L), 
-		"ERROR: no body of the program. Missing \"BEGIN\" or \"END\" label");
-	registers[PC] = labels[BEGIN_L];
-	size_t end = labels[END_L];
-	while (registers[PC] != static_cast<int>(end)) {
-		++registers[PC];
-		commands[registers[PC]]->execute(*this);
+	unsigned current_line = 0;
+
+	while(!file_.eof() && !end) {
+		file_.getline(line_, MAX_LINE);
+
+		VERIFY_CONTRACT(
+		    file_.good() || file_.eof(),
+		    "ERROR: Unable to read line from .bcode file\n");
+
+		pos_ = line_;
+		next_ = line_ + std::strlen(line_);
+
+		int command_id, argument;
+
+		int correct = sscanf(line_, "%d %d", &command_id, &argument);
+
+		// printf("read %d %d\n", command_id, argument);
+		VERIFY_CONTRACT(correct, "ERROR: invalid .bcode file format. Unexpected symbol or incorrect id");
+		commands.push_back(Command::get_command(command_id, argument, current_line));
+
+		if (command_id == 10) begin = current_line;
+		if (command_id == 19) end = current_line;
+
+		++current_line;
+	}
+
+	pc_register = begin;
+	while (pc_register != static_cast<int>(end)) {
+		//printf("execute %d\n", pc_register);
+		commands[pc_register]->execute(*this);
 	}
 }
 

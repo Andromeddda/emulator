@@ -245,16 +245,6 @@ namespace stack_ns {
 		VERIFY_CONTRACT(this->ok(), "ERROR: push failed, resulting stack is invalid");
 	}
 
-
-
-
-
-
-
-
-
-
-
 	// Move push
 	template <typename T>
 	void Stack<T>::push(T&& value) {
@@ -269,26 +259,7 @@ namespace stack_ns {
 		++Length;
 		VERIFY_CONTRACT(this->ok(), "ERROR: push failed, resulting stack is invalid");
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	
-
 	// Constructing in-place
 	template <typename T>
 	template <typename... Args>

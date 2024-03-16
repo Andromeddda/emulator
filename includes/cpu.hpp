@@ -4,80 +4,40 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <fstream>
 
 #include "stack.hpp"
 
 class Command;
+class Parser;
 
-enum RegisterName { PC, AX, BX, CX, DX, EX, FX };
+#define MAX_LINE 100
 
-const std::map<std::string, RegisterName> str_to_reg {
-	{"PC", PC},
-	{"AX", AX},
-	{"BX", BX},
-	{"CX", CX},
-	{"DX", DX},
-	{"EX", EX},
-	{"FX", FX}
-}
-
-RegisterName get_register_id(const std::string& name) {
-	VERIFY_CONTRACT(str_to_reg.contains(name), "ERROR: cannot convert string to RegisterName. No such register");
-	return str_to_reg.at(name);
-}
-
-const unsigned REGS = 7;
-const std::string BEGIN_L = "BEGIN";
-const std::string END_L = "END";
-
-// Registers is a wrapper-class of int[7] array.
-// It is used so that we can access registers only by their names, but not indexes
-class Registers {
-private:
-	int* values;
-public:
-	Registers();
-	~Registers();
-
-	// access to register
-	int& operator[] (const RegisterName reg);
-
-	// read-only access
-	int operator[] (const RegisterName reg) const;
-
-};
-
-class Labels {
-private:
-	// Key-Value map of labels
-	std::map<std::string, size_t> labels;
-public:
-	Labels() = default;
-	
-	// read-only access by key
-	// return the pointer
-	size_t operator[] (const std::string& name);
-	void add(const std::string& name, size_t value);
-	bool contains(const std::string& name);
-
-};
+const int REGS = 6;
 
 class CPU {
+private:
+	// State while reading byte code
+	const char* pos_;
+	const char* next_;
+	char line_[MAX_LINE];
+	unsigned int begin;
+	unsigned int end;
 public:
-	// These are used while parsing and stored unchanged while running the code 
-	std::vector<Command*> commands; // parsed code
-	Labels labels; // parsed map of labels as keys and indexes of commands as values 
+	// file with byte-code
+	std::ifstream file_;
 
-	// These are empty till parsing is done and are used in runtime
-	Registers registers;
 	stack_ns::Stack<int> stack;
-	stack_ns::Stack<size_t> call_stack;
+	stack_ns::Stack<int> call_stack;
+	
+	std::vector<Command*> commands;
 
-	CPU(std::vector<Command*> code, Labels labs);
+	int* registers;
+	int pc_register;
+	
+	CPU(const std::string& filename);
 
-	// all the fields that need to be cleared (Registers, Labels and two Stacks) have good destructors
-	// so  this destructor can be default
-	~CPU() = default;
+	~CPU();
 
 	void run();
 };

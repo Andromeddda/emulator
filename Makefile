@@ -53,21 +53,37 @@ RESET   = \033[0m
 #-------
 
 TEST = test
+CODE = main
+RUN = run
 
 SOURCES = $(notdir $(wildcard $(SRCDIR)/*.cpp))
 
 # Object files:
 TEST_OBJ = $(BUILD)/$(TEST).o
-OBJECTS = $(filter-out $(TEST_OBJ), $(SOURCES:%.cpp=$(BUILD)/%.o))
+CODE_OBJ = $(BUILD)/$(CODE).o
+RUN_OBJ = $(BUILD)/$(RUN).o
+OBJECTS = $(filter-out $(RUN_OBJ) $(TEST_OBJ) $(CODE_OBJ), $(SOURCES:%.cpp=$(BUILD)/%.o))
 
 # Executable files
 TEST_EXECUTABLE = $(BUILD)/$(TEST)
+CODE_EXECUTABLE = $(BUILD)/$(CODE)
+RUN_EXECUTABLE = $(BUILD)/$(RUN)
 
 #---------------
 # Build process
 #---------------
 
-default: $(TEST_EXECUTABLE)
+default: $(TEST_EXECUTABLE) $(CODE_EXECUTABLE) $(RUN_EXECUTABLE)
+
+# Link object files together
+$(RUN_EXECUTABLE) : $(RUN_OBJ) $(OBJECTS)
+	@printf "$(BYELLOW)Linking executable test $(BCYAN)$@$(RESET)\n"
+	$(CC) $(LDFLAGS) $^ -o $@
+
+# Link object files together
+$(CODE_EXECUTABLE) : $(CODE_OBJ) $(OBJECTS)
+	@printf "$(BYELLOW)Linking executable test $(BCYAN)$@$(RESET)\n"
+	$(CC) $(LDFLAGS) $^ -o $@
 
 # Link object files together
 $(TEST_EXECUTABLE) : $(TEST_OBJ) $(OBJECTS)
@@ -102,7 +118,16 @@ include $(wildcard $(DEPFILES))
 # Run test:
 $(TEST): $(TEST_EXECUTABLE)
 	@mkdir -p res
-	./$(TEST_EXECUTABLE)
+	./$<
+
+$(RUN): $(RUN_EXECUTABLE)
+	@mkdir -p res
+	./$<
+
+code: $(CODE_EXECUTABLE)
+	@mkdir -p res
+	./$<
+
 
 log:
 	@cat hello.txt
@@ -116,4 +141,4 @@ clean:
 	rm -rf $(BUILD)
 
 # List of non-file targets:
-.PHONY: test clean default log
+.PHONY: test clean default log code

@@ -1,124 +1,150 @@
-#include "command.hpp"
 #include "cpu.hpp"
+#include "command.hpp"
+
 #include <iostream>
 #include <cstdio>
 #include <functional>
 #include <map>
 
-IntArgCommand::IntArgCommand(const int& val) : argument(val) {}
-
-RegisterArgCommand::RegisterArgCommand(const RegisterName& reg_name) : argument(reg_name) {}
-
-LabelArgCommand::LabelArgCommand(const std::string& label_name) : argument(label_name) {}
+// Constructors
+Command::Command() : argument(0) { }
+Command::Command(const int& arg) : argument(arg) { }
 
 ///////////////////////////
 // COMMAND TYPES: NO ARG //
 ///////////////////////////
 
-class POPCommand : public NoArgCommand {
+class BEGINCommand : public Command {
 public:
-	POPCommand() : NoArgCommand() { };
-	static Command* get_command() { return new POPCommand(); }
-	virtual void execute(CPU& cpu) override {
-		cpu.stack.pop();
+	BEGINCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg = 0) { return new BEGINCommand(arg); }
+	virtual void execute(CPU& cpu) override { 
+		cpu.pc_register += 1;
 	}
 };
 
-class ADDCommand : public NoArgCommand {
+class ENDCommand : public Command {
 public:
-	ADDCommand() = default;
-	static Command* get_command() { return new ADDCommand(); }
+	ENDCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg = 0) { return new ENDCommand(arg); }
+	virtual void execute(CPU& cpu) override {
+		cpu.pc_register = 0;
+	}
+};
+
+class POPCommand : public Command {
+public:
+	POPCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg = 0) { return new POPCommand(arg); }
+	virtual void execute(CPU& cpu) override {
+		cpu.stack.pop();
+		cpu.pc_register += 1;
+
+	}
+};
+
+class ADDCommand : public Command {
+public:
+	ADDCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg = 0) { return new ADDCommand(arg); }
 	virtual void execute(CPU& cpu) override {
 		auto rhs = cpu.stack.top();
 		cpu.stack.pop();
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		cpu.stack.push(rhs + lhs);
+		cpu.pc_register += 1;
 	}
 };
 
-class SUBCommand : public NoArgCommand {
+class SUBCommand : public Command {
 public:
-	SUBCommand() = default;
-	static Command* get_command() { return new SUBCommand(); }
+	SUBCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg = 0) { return new SUBCommand(arg); }
 	virtual void execute(CPU& cpu) override  {
 		auto rhs = cpu.stack.top();
 		cpu.stack.pop();
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		cpu.stack.push(rhs - lhs);
+		cpu.pc_register += 1;
 	}
 };
 
-class MULCommand : public NoArgCommand {
+class MULCommand : public Command {
 public:
-	MULCommand() = default;
-	static Command* get_command()  { return new MULCommand(); }
+	MULCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg = 0)  { return new MULCommand(arg); }
 	virtual void execute(CPU& cpu) override {
 		auto rhs = cpu.stack.top();
 		cpu.stack.pop();
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		cpu.stack.push(rhs * lhs);
+		cpu.pc_register += 1;
 	}
 };
 
-class DIVCommand : public NoArgCommand {
+class DIVCommand : public Command {
 public:
-	DIVCommand() = default;
-	static Command* get_command()  { return new DIVCommand(); }
+	DIVCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg = 0)  { return new DIVCommand(arg); }
 	virtual void execute(CPU& cpu) override {
 		auto rhs = cpu.stack.top();
 		cpu.stack.pop();
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		cpu.stack.push(rhs / lhs);
+		cpu.pc_register += 1;
 	}
 };
 
-class OUTCommand : public NoArgCommand {
+class OUTCommand : public Command {
 public:
-	OUTCommand() = default;
-	static Command* get_command() { return new OUTCommand(); }
+	OUTCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg = 0) { return new OUTCommand(arg); }
 	virtual void execute(CPU& cpu) override  {
 		printf("%d\n", cpu.stack.top());
 		cpu.stack.pop();
+		cpu.pc_register += 1;
 	}
 };
 
-class INCommand : public NoArgCommand {
+class INCommand : public Command {
 public:
-	INCommand() = default;
-	static Command* get_command() { return new INCommand(); }
+	INCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg = 0) { return new INCommand(arg); }
 	virtual void execute(CPU& cpu) override {
 		int value;
 		int correct = scanf("%d", &value);
 		VERIFY_CONTRACT(correct == 1, "ERROR: invalid input in IN command");
 		cpu.stack.push(value);
+		cpu.pc_register += 1;
 	}
 };
 
-class RETCommand : public NoArgCommand {
+class RETCommand : public Command {
 public:
-	RETCommand() = default;
-	static Command* get_command() { return new RETCommand(); }
+	RETCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg = 0) { return new RETCommand(arg); }
 	virtual void execute(CPU& cpu) override {
-		cpu.registers[PC] = (cpu.call_stack.top());
+		cpu.pc_register = cpu.call_stack.top();
 		cpu.call_stack.pop();
+		cpu.pc_register += 1;
 	}
 };
-
 
 ////////////////////////////
 // COMMAND TYPES: INT ARG //
 ////////////////////////////
 
-class PUSHCommand : public IntArgCommand {
+class PUSHCommand : public Command {
 public:
-	PUSHCommand(const int& arg) : IntArgCommand(arg) {}
+	PUSHCommand(const int& arg) : Command(arg) {}
 	static Command* get_command(const int& arg)  { return new PUSHCommand(arg); }
 	virtual void execute(CPU& cpu) override {
 		cpu.stack.push(argument);
+		cpu.pc_register += 1;
 	}
 };
 
@@ -126,22 +152,26 @@ public:
 // COMMAND TYPES: REGISTER ARG //
 /////////////////////////////////
 
-class PUSHRCommand : public RegisterArgCommand {
+class PUSHRCommand : public Command {
 public:
-	PUSHRCommand(const RegisterName& reg_name) : RegisterArgCommand(reg_name) {}
-	static Command* get_command(const RegisterName& reg_name) { return new PUSHRCommand(reg_name); }
+	PUSHRCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg) { return new PUSHRCommand(arg); }
 	virtual void execute(CPU& cpu) override  {
+		VERIFY_CONTRACT( (argument >= 0) && (argument <= REGS), "ERROR: invalid register id after command");
 		cpu.stack.push(cpu.registers[argument]);
+		cpu.pc_register += 1;
 	}
 };
 
-class POPRCommand : public RegisterArgCommand {
+class POPRCommand : public Command {
 public:
-	POPRCommand(const RegisterName& reg_name) : RegisterArgCommand(reg_name) {}
-	static Command* get_command(const RegisterName& reg_name) { return new POPRCommand(reg_name); }
+	POPRCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg) { return new POPRCommand(arg); }
 	virtual void execute(CPU& cpu) override {
+		VERIFY_CONTRACT( (argument >= 0) && (argument <= REGS), "ERROR: invalid register id after command");
 		cpu.registers[argument] = cpu.stack.top();
 		cpu.stack.pop();
+		cpu.pc_register += 1;
 	}
 };
 
@@ -149,162 +179,181 @@ public:
 // COMMAND TYPES: LABEL ARG //
 //////////////////////////////
 
-class JMPCommand : public LabelArgCommand {
+class JMPCommand : public Command {
 public:
-	JMPCommand(const std::string& label_name) : LabelArgCommand(label_name) {}
-	static Command* get_command(const std::string label_name) { return new JMPCommand(label_name); }
+	JMPCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg) { return new JMPCommand(arg); }
 	virtual void execute(CPU& cpu) override {
-		VERIFY_CONTRACT(cpu.labels.contains(argument), "ERROR: JMP to non-existing label");
-		cpu.registers[PC] = (cpu.labels[argument]);
+		cpu.pc_register = argument;
 	}
 };
 
-class JEQCommand : public LabelArgCommand {
+class JEQCommand : public Command {
 public:
-	JEQCommand(const std::string& label_name) : LabelArgCommand(label_name) {}
-	static Command* get_command(const std::string label_name) { return new JEQCommand(label_name); }
+	JEQCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg) { return new JEQCommand(arg); }
 	virtual void execute(CPU& cpu) override  {
-		VERIFY_CONTRACT(cpu.labels.contains(argument), "ERROR: JEQ to non-existing label");
 		auto rhs = cpu.stack.top();
 		cpu.stack.pop();
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs == lhs) {
-			cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.pc_register = argument;
+		}
+		else {
+			cpu.pc_register += 1;
 		}
 	}
 };
 
-class JNECommand : public LabelArgCommand {
+class JNECommand : public Command {
 public:
-	JNECommand(const std::string& label_name) : LabelArgCommand(label_name) {}
-	static Command* get_command(const std::string label_name) { return new JNECommand(label_name); }
+	JNECommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg) { return new JNECommand(arg); }
 	virtual void execute(CPU& cpu) override  {
-		VERIFY_CONTRACT(cpu.labels.contains(argument), "ERROR: JEQ to non-existing label");
 		auto rhs = cpu.stack.top();
 		cpu.stack.pop();
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs != lhs) {
-			cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.pc_register = argument;
+		}
+		else {
+			cpu.pc_register += 1;
 		}
 	}
 };
 
-class JACommand : public LabelArgCommand {
+class JACommand : public Command {
 public:
-	JACommand(const std::string& label_name) : LabelArgCommand(label_name) {}
-	static Command* get_command(const std::string label_name) { return new JACommand(label_name); }
+	JACommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg) { return new JACommand(arg); }
 	virtual void execute(CPU& cpu) override {
-		VERIFY_CONTRACT(cpu.labels.contains(argument), "ERROR: JA to non-existing label");
 		auto rhs = cpu.stack.top();
 		cpu.stack.pop();
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs > lhs) {
-			cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.pc_register = argument;
+		}
+		else {
+			cpu.pc_register += 1;
 		}
 	}
 };
 
-class JAECommand : public LabelArgCommand {
+class JAECommand : public Command {
 public:
-	JAECommand(const std::string& label_name) : LabelArgCommand(label_name) {}
-	static Command* get_command(const std::string label_name) { return new JAECommand(label_name); } 
+	JAECommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg) { return new JAECommand(arg); } 
 	virtual void execute(CPU& cpu) override {
-		VERIFY_CONTRACT(cpu.labels.contains(argument), "ERROR: JEQ to non-existing label");
 		auto rhs = cpu.stack.top();
 		cpu.stack.pop();
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs >= lhs) {
-			cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.pc_register = argument;
+		}
+		else {
+			cpu.pc_register += 1;
 		}
 	}
 };
 
-class JBCommand : public LabelArgCommand {
+class JBCommand : public Command {
 public:
-	JBCommand(const std::string& label_name) : LabelArgCommand(label_name) {}
-	static Command* get_command(const std::string label_name) { return new JBCommand(label_name); }
+	JBCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg) { return new JBCommand(arg); }
 	virtual void execute(CPU& cpu) override {
-		VERIFY_CONTRACT(cpu.labels.contains(argument), "ERROR: JB to non-existing label");
 		auto rhs = cpu.stack.top();
 		cpu.stack.pop();
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs < lhs) {
-			cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.pc_register = argument;
+		}
+		else {
+			cpu.pc_register += 1;
 		}
 	}
 };
 
-class JBECommand : public LabelArgCommand {
+class JBECommand : public Command {
 public:
-	JBECommand(const std::string& label_name) : LabelArgCommand(label_name) {}
-	static Command* get_command(const std::string label_name) { return new JBECommand(label_name); }
+	JBECommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg) { return new JBECommand(arg); }
 	virtual void execute(CPU& cpu) override {
-		VERIFY_CONTRACT(cpu.labels.contains(argument), "ERROR: JBE to non-existing label");
 		auto rhs = cpu.stack.top();
 		cpu.stack.pop();
 		auto lhs = cpu.stack.top();
 		cpu.stack.pop();
 		if (rhs <= lhs) {
-			cpu.registers[PC] = (cpu.labels[argument]);
+			cpu.pc_register = argument;
+		}
+		else {
+			cpu.pc_register += 1;
 		}
 	}
 };
 
-class CALLCommand : public LabelArgCommand {
+class CALLCommand : public Command {
 public:
-	CALLCommand(const std::string& label_name) : LabelArgCommand(label_name) {}
-	static Command* get_command(const std::string label_name) { return new CALLCommand(label_name); }
+	CALLCommand(const int& arg) : Command(arg) {}
+	static Command* get_command(const int& arg) { return new CALLCommand(arg); }
 	virtual void execute(CPU& cpu) override {
-		VERIFY_CONTRACT(cpu.labels.contains(argument), "ERROR: CALL of non-existing label");
-		cpu.call_stack.push(cpu.labels[argument]);
-		cpu.registers[PC] = (cpu.call_stack.top());
+		cpu.call_stack.push(cpu.pc_register);
+		cpu.pc_register = argument;
 	}
 };
 
 // Next mapping is used when the parser needs to know what type of argument it needs to parse next
 // depending on Command.get_command_arg_type(std::string&)
+const std::map<int, std::function<Command*(const int&)>> command_id_to_function { 
+	{10, BEGINCommand::get_command},
+	{11, POPCommand::get_command},
+ 	{12, ADDCommand::get_command},
+ 	{13, SUBCommand::get_command},
+ 	{14, MULCommand::get_command},
+ 	{15, DIVCommand::get_command},
+ 	{16, OUTCommand::get_command}, 
+ 	{17, INCommand::get_command},
+ 	{18, RETCommand::get_command},
+ 	{19, ENDCommand::get_command},
 
-const std::map<std::string, std::function<Command*()>> no_arg_cmds { 
-	{"POP", POPCommand::get_command},
- 	{"ADD", ADDCommand::get_command},
- 	{"SUB", SUBCommand::get_command},
- 	{"MUL", MULCommand::get_command},
- 	{"DIV", DIVCommand::get_command},
- 	{"OUT", OUTCommand::get_command}, 
- 	{"IN", INCommand::get_command},
- 	{"RET", RETCommand::get_command}
+ 	{20, CALLCommand::get_command },
+	{21, JMPCommand::get_command },
+	{22, JEQCommand::get_command },
+	{23, JNECommand::get_command },
+	{24, JACommand::get_command },
+	{25, JAECommand::get_command },
+	{26, JBCommand::get_command },
+	{27, JBECommand::get_command },
+	
+	{30, PUSHCommand::get_command },
+
+	{40, POPRCommand::get_command}, 
+	{41, PUSHRCommand::get_command},
 };
 
-const std::map<std::string, std::function<Command*(const int&)>> int_arg_cmds {
-	{"PUSH", PUSHCommand::get_command } 
-};
+Command* Command::get_command(const int& id, const int& arg, const unsigned& line) {
+	VERIFY_CONTRACT(command_id_to_function.contains(id), "ERROR: invalid command id");
 
-const std::map<std::string, std::function<Command*(const std::string&)>> label_arg_cmds { 
-	{"JMP", JMPCommand::get_command },
-	{"JEQ", JEQCommand::get_command },
-	{"JNE", JNECommand::get_command },
-	{"JA", JACommand::get_command },
-	{"JAE", JAECommand::get_command },
-	{"JB", JBCommand::get_command },
-	{"JBE", JBECommand::get_command },
-	{"CALL", CALLCommand::get_command }
-};
+	int command_arg_family = id / 10;
 
-const std::map<std::string, std::function<Command*(const RegisterName&)>> reg_arg_cmds { 
-	{"POPR", POPRCommand::get_command}, 
-	{"PUSHR", PUSHRCommand::get_command}, 
-};
+	// Check if non-argument commands always recieve zero
+	if (command_arg_family == 1) {
+		VERIFY_CONTRACT(arg == 0, "ERROR: non-zero argument after non-argument command");
+	}
 
-CommandArgType get_command_arg_type(const std::string& name) {
-	if (int_arg_cmds.contains(name)) return IntArg;
-	if (no_arg_cmds.contains(name)) return NoArg;
-	if (label_arg_cmds.contains(name)) return LabelArg;
-	if (reg_arg_cmds.contains(name)) return RegArg;
-	TERMINATE("ERROR: no such command");
+	// Check if label is correct
+	if (command_arg_family == 2) {
+		VERIFY_CONTRACT((arg >= 0) && (arg < static_cast<int>(line)), "ERROR: pointer to undefined or incorrect label");
+	}
+
+	// Check if register id is correct
+	if (command_arg_family == 4) {
+		VERIFY_CONTRACT( (arg >= 0) && (arg <= REGS), "ERROR: invalid register id after command");
+	}
+
+	return command_id_to_function.at(id)(arg);
 }
-

@@ -1,14 +1,93 @@
 #include "parser.hpp"
+#include "command.hpp"
+#include "cpu.hpp"
+#include "utils.hpp"
 
-Parser::Parser(const char* filename) :
-    file_ (std::ifstream(filename, std::ios::in)), pos_ (), end_  ()
-{
+const std::map<std::string, int> str_to_reg {
+    {"AX", 0},
+    {"BX", 1},
+    {"CX", 2},
+    {"DX", 3},
+    {"EX", 4},
+    {"FX", 5}
+};
+
+int get_register_id(const std::string& name) {
+    VERIFY_CONTRACT(str_to_reg.contains(name), "ERROR: cannot get register id. No such register");
+    return str_to_reg.at(name);
+}
+
+// All id-s are two-digit numbers
+// Commands with no argument        start with "1"
+// Commands with label argument     start with "2"
+// Commands with integer argument   start with "3"
+// Commands with register argumen   start with "4"
+const std::map<std::string, int> command_name_to_id {
+    {"BEGIN", 10},
+    {"POP", 11},
+    {"ADD", 12},
+    {"SUB", 13},
+    {"MUL", 14},
+    {"DIV", 15},
+    {"OUT", 16},
+    {"IN",  17},
+    {"RET", 18},
+    {"END", 19},
+
+    {"CALL", 20},
+    {"JMP", 21},
+    {"JEQ", 22},
+    {"JNE", 23},
+    {"JA",  24},
+    {"JAE", 25},
+    {"JB",  26},
+    {"JBE", 27},
+
+    {"PUSH", 30},
+
+    {"PUSHR", 40},
+    {"POPR", 41}
+};
+
+int get_command_id(std::string& name) {
+    VERIFY_CONTRACT(command_name_to_id.contains(name), "ERROR: cannot get command id. No such command");
+    return command_name_to_id.at(name);
+}
+
+////////////
+// LABELS //
+////////////
+
+// read-only access by key
+// return the pointer
+int Labels::operator[] (const std::string& name) {
+    VERIFY_CONTRACT(labels.contains(name), "ERROR: there is no such label as \"" << name << "\"");
+    return labels.at(name);
+}
+
+void Labels::add(const std::string& name, int value) {
+    VERIFY_CONTRACT(!labels.contains(name), "ERROR: label \"" << name << "\" already exist");
+    labels.emplace(name, value);
+}
+
+bool Labels::contains(const std::string& name) {
+    return labels.contains(name);
+}
+
+////////////
+// PARSER //
+////////////
+
+// Constructor
+Parser::Parser(const std::string& filename) :
+    file_ (std::ifstream(filename, std::ios::in)), pos_ (), end_(), command_line_number(0) {
     VERIFY_CONTRACT(file_.good(), "Unable to open file " << filename);
 
     // Initialize the first line:
     read_line_from_file();
 }
 
+// Put line in private buffer
 void Parser::read_line_from_file() {
     file_.getline(line_, MAX_LINE_SIZE);
 
@@ -67,12 +146,26 @@ bool Parser::parse_newline_sequence() {
     return success;
 }
 
-
 bool Parser::parse_end_of_file() {
     return file_.eof();
 }
 
-std::string& Parser::parse_command_name() {
+bool Parser::parse_label_declaration() {
+    static const std::regex pattern{"[A-Za-z]+:"};
+    // Perform parsing:
+    std::string label_str;
+    bool success = parse_pattern(pattern, label_str);
+    if (!success) {
+        return false;
+    }
+
+    label_str.pop_back();
+    labels.add(label_str, command_line_number);
+
+    return true;
+}
+
+int Parser::parse_command() {
     static const std::regex pattern{"[A-Z]+"};
     // Skip leading whitespaces (may be none):
     parse_space_sequence();
@@ -84,18 +177,17 @@ std::string& Parser::parse_command_name() {
     {
         throw std::runtime_error("Unable to parse command name!\n");
     }
-    return cmd_name;
+    return get_command_id(cmd_name);
 }
 
-RegisterName Parser::parse_register_name()
-{
+int Parser::parse_register() {
     static const std::regex pattern{"[A-Z]+"};
 
     // Skip leading whitespaces:
     bool success = parse_space_sequence();
     if (!success)
     {
-        throw std::runtime_error("Expected a space sequence before command name!\n");
+        throw std::runtime_error("Expected a space sequence before register!\n");
     }
 
     // Perform parsing:
@@ -110,7 +202,7 @@ RegisterName Parser::parse_register_name()
     return get_register_id(reg_name);
 }
 
-int Parser::parse_number() {
+int Parser::parse_int_number() {
     static const std::regex pattern{"(\\+|-)?(0|[1-9][0-9]*)"};
 
     // Skip leading whitespaces:
@@ -130,3 +222,66 @@ int Parser::parse_number() {
 
     return std::atoi(val_str.c_str());
 }
+
+int Parser::parse_label() {
+    static const std::regex pattern{"[A-Za-z]+"};
+
+    // Skip leading whitespaces:
+    bool success = parse_space_sequence();
+    if (!success)
+    {
+        throw std::runtime_error("Expected a space sequence before label name!\n");
+    }
+
+    // Perform parsing:
+    std::string label_str;
+    success = parse_pattern(pattern, label_str);
+    if (!success) {
+        throw std::runtime_error("Expected label name!\n");
+    }
+
+    if (!labels.contains(label_str)) {
+        throw std::runtime_error("Reference to undefined label!\n");
+    }
+
+    return labels[label_str];
+}
+
+void Parser::parse(const std::string& outfile) {
+    std::ofstream out;
+    out.open(outfile);
+
+    if (out.is_open()) {
+        while (!parse_end_of_file()) {
+            // skip all empty lines at every step
+            parse_newline_sequence();
+
+            if (parse_label_declaration()) continue;
+            else {
+                int cmd_id = parse_command();
+                int argument;
+
+                // switch case may fall through T_T 
+                if (cmd_id / 10 == 1) {
+                    argument = 0;
+                }
+                else if (cmd_id / 10 == 2) {
+                    argument = parse_label();
+                }
+                else if (cmd_id / 10 == 3) {
+                    argument = parse_int_number();
+                }
+                else if (cmd_id / 10 == 4) {
+                    argument = parse_register();
+                }
+                else {
+                    throw std::runtime_error("Unexpected error");
+                }
+
+
+                out << cmd_id << " " << argument << "\n";
+                ++command_line_number;
+            }
+        } // while
+    } // if
+} // parse
