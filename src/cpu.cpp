@@ -36,7 +36,7 @@ void CPU::run() {
 	unsigned current_line = 0;
 
 	// read byte code and make list of commands
-	while(!file_.eof() && !end) {
+	while(!file_.eof()) {
 		// read line of byte code
 		file_.getline(line_, MAX_LINE);
 
@@ -64,7 +64,9 @@ void CPU::run() {
 	// execute
 	pc_register = begin;
 	while (pc_register != static_cast<int>(end)) {
-		VERIFY_CONTRACT((pc_register < static_cast<int>(commands.size())) && (pc_register >= 0), 
+		int size = (int)commands.size();
+		
+		VERIFY_CONTRACT((pc_register < size) && (pc_register >= 0), 
 			"ERROR: jump or call to non-existing pointer");
 		commands[pc_register]->execute(*this);
 	}

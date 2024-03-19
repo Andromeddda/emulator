@@ -126,10 +126,11 @@ bool Parser::parse_space_sequence() {
 }
 
 bool Parser::parse_newline_sequence() {
+    parse_space_sequence();
     bool success = (pos_ == end_);
-    while (pos_ == end_ && !file_.eof())
-    {
+    while (pos_ == end_ && !file_.eof()) {
         read_line_from_file();
+        parse_space_sequence();
     }
     return success;
 }
