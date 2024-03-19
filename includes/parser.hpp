@@ -10,22 +10,6 @@
 
 #define MAX_LINE_SIZE 100
 
-// wrapper class for label mapping
-class Labels {
-private:
-	// Key-Value map of labels
-	
-public:
-	Labels() = default;
-	
-	// read-only access by key
-	// return the pointer
-	int operator[] (const std::string& name);
-	void add(const std::string& name, int value);
-	bool contains(const std::string& name);
-
-};
-
 class Parser {
 private:
 	std::ifstream file_;
@@ -47,8 +31,8 @@ private:
 	bool parse_label_declaration();
 	int parse_command();
 	int parse_register();
-	std::string parse_label();
 	int parse_int_number();
+	std::string parse_label();
 
 	std::map<std::string, int> declared_labels;
 	std::map<long int, std::string> used_labels;

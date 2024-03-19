@@ -35,7 +35,9 @@ CPU::~CPU() {
 void CPU::run() {
 	unsigned current_line = 0;
 
+	// read byte code and make list of commands
 	while(!file_.eof() && !end) {
+		// read line of byte code
 		file_.getline(line_, MAX_LINE);
 
 		VERIFY_CONTRACT(
@@ -45,24 +47,25 @@ void CPU::run() {
 		pos_ = line_;
 		next_ = line_ + std::strlen(line_);
 
+		// scan command from line
 		int command_id, argument;
-
 		int correct = sscanf(line_, "%d %d", &command_id, &argument);
 
-		//printf("read %d %d\n", command_id, argument);
 		VERIFY_CONTRACT(correct, "ERROR: invalid .bcode file format. Unexpected symbol or incorrect id");
 		commands.push_back(Command::get_command(command_id, argument));
 
+		// remember the begin and end
 		if (command_id == 10) begin = current_line;
 		if (command_id == 19) end = current_line;
 
 		++current_line;
 	}
 
+	// execute
 	pc_register = begin;
 	while (pc_register != static_cast<int>(end)) {
-		//printf("execute %d\n", pc_register);
+		VERIFY_CONTRACT((pc_register < static_cast<int>(commands.size())) && (pc_register >= 0), 
+			"ERROR: jump or call to non-existing pointer");
 		commands[pc_register]->execute(*this);
 	}
 }
-
